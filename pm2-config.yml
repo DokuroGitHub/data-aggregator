@@ -1,0 +1,7 @@
+apps:
+  - name: data-aggregator   # Name of the application
+    script: dist/main.js # Path to the built application
+    instances: 4         # Set the number of instances (use "max" for cluster mode)
+    autorestart: true     # Automatically restart the application if it crashes
+    watch: false          # Set to true if you want to watch for file changes (not recommended for production)
+    max_memory_restart: 512M # Restart the app if it exceeds 512MB memory usage
