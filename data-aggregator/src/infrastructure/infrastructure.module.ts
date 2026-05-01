@@ -11,6 +11,7 @@ import {
 } from './database';
 import { ExternalApisModule } from './external-apis';
 import { LoggingModule } from './logging';
+import { RedisModule } from './redis/redis.module';
 
 const PROVIDERS: Provider[] = [
   {
@@ -26,8 +27,9 @@ const PROVIDERS: Provider[] = [
     LoggingModule,
     HttpModule,
     ExternalApisModule,
+    RedisModule,
   ],
   providers: PROVIDERS,
-  exports: [ExternalApisModule, ...PROVIDERS],
+  exports: [ExternalApisModule, RedisModule, ...PROVIDERS],
 })
 export class InfrastructureModule {}

@@ -4,6 +4,7 @@ import {
   IElasticApmConfiguration,
   IEsLogConfiguration,
   IPostgresConfiguration,
+  IRedisConfiguration,
 } from '@domain/interfaces';
 import { registerAs } from '@nestjs/config';
 
@@ -61,4 +62,16 @@ export const esLogConfig = registerAs(
   }),
 );
 
-export const allConfigs = [appConfig, postgresConfig, elasticApmConfig, esLogConfig];
+export const redisConfig = registerAs(
+  CONFIG_NAMES.REDIS, // Redis configuration
+  (): IRedisConfiguration => ({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: Number(process.env.REDIS_PORT || 6379),
+    password: process.env.REDIS_PASSWORD,
+    db: Number(process.env.REDIS_DB || 0),
+    aggregatorPrefix: process.env.REDIS_AGGREGATOR_PREFIX || 'fai:aggregator',
+    aggregatorTTL: Number(process.env.REDIS_AGGREGATOR_TTL) || 3600,
+  }),
+);
+
+export const allConfigs = [appConfig, postgresConfig, elasticApmConfig, esLogConfig, redisConfig];

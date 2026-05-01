@@ -48,3 +48,13 @@ export interface IEsLogConfiguration {
   buffering: boolean;
   bufferLimit: number;
 }
+
+// Redis configuration interfaces
+export interface IRedisConfiguration {
+  host: string;
+  port: number;
+  password?: string;
+  db?: number;
+  aggregatorPrefix: string;
+  aggregatorTTL: number;
+}

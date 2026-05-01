@@ -18,6 +18,8 @@ export class AggregatorRepository implements IAggregatorRepository {
     const payload = this.repository.create({
       ...this.toOrm(aggregator),
       updatedBy: aggregator.updatedBy || aggregator.createdBy,
+      deletedBy: null,
+      deletedAt: null,
     });
 
     await this.repository.upsert(payload, ['name']);

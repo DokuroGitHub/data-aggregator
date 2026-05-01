@@ -24,7 +24,6 @@ export interface IRequestOptions extends Partial<AxiosRequestConfig> {
 @Injectable()
 export class ExternalApiClient {
   protected readonly logger: ReturnType<ILoggingService['createServiceLogger']>;
-  private static readonly SERVICE_NAME = 'ExternalApiClient';
 
   constructor(
     protected readonly httpService: HttpService,
@@ -33,11 +32,20 @@ export class ExternalApiClient {
     @Inject(LOGGING_SERVICE)
     protected readonly loggingService: ILoggingService,
   ) {
-    this.logger = this.loggingService.createServiceLogger(ExternalApiClient.SERVICE_NAME);
+    this.logger = this.loggingService.createServiceLogger(ExternalApiClient.name);
   }
 
-  async request(method: HttpMethod, url: string, data?: unknown, options?: IRequestOptions) {
-    const startTime = Date.now();
+  async request(
+    method: HttpMethod,
+    url: string,
+    data?: unknown,
+    options?: IRequestOptions,
+  ): Promise<{
+    statusText: string;
+    responseTime: string;
+    error?: unknown;
+    data: unknown;
+  }> {
     const config: AxiosRequestConfig = {
       timeout: options?.timeout,
       params: {
@@ -53,6 +61,7 @@ export class ExternalApiClient {
     // this.logger.info(`[${method}] Making request to: ${url}`);
 
     let response: AxiosResponse;
+    const startTime = Date.now();
 
     try {
       switch (method) {
@@ -75,12 +84,17 @@ export class ExternalApiClient {
           throw new Error(`Unsupported HTTP method: ${method}`);
       }
 
-      this.logger.info(`[${method}] Request successful: ${url} - ${Date.now() - startTime}ms`);
+      const duration = Date.now() - startTime;
+
+      this.logger.info(`[${method}] Request successful: ${url} - ${duration}ms`);
       return {
         statusText: response.statusText,
+        responseTime: `${duration}ms`,
+        error: null,
         data: response.data,
       };
     } catch (error) {
+      const duration = Date.now() - startTime;
       const errorContext = {
         method,
         url,
@@ -88,11 +102,16 @@ export class ExternalApiClient {
         statusText: error?.response?.statusText,
         data: error?.response?.data,
         message: error?.message,
-        duration: `${Date.now() - startTime}ms`,
+        responseTime: `${duration}ms`,
       };
 
       this.logger.error(`[${method}] Request failed: ${url}`, errorContext);
-      throw error;
+      return {
+        statusText: 'Error',
+        responseTime: `${duration}ms`,
+        error: error,
+        data: null,
+      };
     }
   }
 }

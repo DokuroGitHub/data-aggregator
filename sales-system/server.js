@@ -169,6 +169,13 @@ const mockData = [
  *           enum: [pdf, pptx, docx, txt, xlsx]
  *         description: Filter by file MIME type
  *         example: "pdf"
+ *       - in: query
+ *         name: waitMs
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *         description: Artificial delay in milliseconds
  *     responses:
  *       200:
  *         description: Search results with pagination
@@ -189,9 +196,16 @@ const mockData = [
  *                   type: array
  */
 // Search endpoint
-app.get("/api/sales-system/search", (req, res) => {
+app.get("/api/sales-system/search", async (req, res) => {
   try {
-    const { q, pageSize = 10, pageNumber = 1, mimeType } = req.query;
+    const {
+      q,
+      pageSize = 10,
+      pageNumber = 1,
+      mimeType,
+      waitMs = 0,
+    } = req.query;
+    await new Promise((resolve) => setTimeout(resolve, parseInt(waitMs)));
 
     // Validate pagination parameters
     const page = Math.max(1, parseInt(pageNumber) || 1);
@@ -255,7 +269,7 @@ app.listen(PORT, () => {
     `- Search by mime type: http://localhost:${PORT}/api/sales-system/search?mimeType=pdf`,
   );
   console.log(
-    `- Combined search: http://localhost:${PORT}/api/sales-system/search?q=101&pageSize=10&pageNumber=1&mimeType=pdf`,
+    `- Combined search: http://localhost:${PORT}/api/sales-system/search?q=101&pageSize=10&pageNumber=1&mimeType=pdf&waitMs=2000`,
   );
 });
 

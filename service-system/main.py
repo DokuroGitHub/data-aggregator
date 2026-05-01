@@ -1,7 +1,7 @@
+import time
 from fastapi import FastAPI, Header, HTTPException, status
-from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
+from pydantic import BaseModel, Field
+from typing import List
 
 app = FastAPI(
     title="Service System API",
@@ -12,7 +12,8 @@ app = FastAPI(
 
 # Request model
 class DownloadDocumentsRequest(BaseModel):
-    VIN: int
+    VIN: int = Field(101, description="Vehicle Identification Number")
+    wait_ms: int = 0
 
 
 # Response models
@@ -130,7 +131,8 @@ MOCK_DOCUMENTS = [
     description="Retrieve documents associated with a specific VIN",
 )
 async def download_documents(
-    request: DownloadDocumentsRequest, x_api_key: str = Header(None)
+    request: DownloadDocumentsRequest,
+    x_api_key: str = Header("admin", alias="x-api-key"),
 ):
     """
     Download documents by VIN.
@@ -150,6 +152,10 @@ async def download_documents(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
         )
+
+    # wait
+    if request.wait_ms > 0:
+        time.sleep(request.wait_ms / 1000)
 
     # Filter documents by VIN
     filtered_docs = [doc for doc in MOCK_DOCUMENTS if doc["VIN"] == request.VIN]

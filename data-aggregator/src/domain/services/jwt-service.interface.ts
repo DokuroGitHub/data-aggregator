@@ -16,7 +16,6 @@ export interface DecodedToken {
 }
 
 export interface IJwtService {
-  getPhoneFromToken(token?: string): string | null;
   decodeUserToken(token?: string): DecodedToken | null;
   decodeToken(token: string): DecodedToken | null;
 }

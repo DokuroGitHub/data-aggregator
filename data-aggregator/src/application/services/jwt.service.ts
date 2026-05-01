@@ -14,16 +14,6 @@ export class JwtService implements IJwtService {
     this.logger = this.loggingService.createServiceLogger(JwtService.name);
   }
 
-  getPhoneFromToken(token?: string): string | null {
-    try {
-      const decoded = this.decodeUserToken(token);
-      return decoded?.preferred_username || null;
-    } catch (error) {
-      this.logger.error(`Error getting phone from token: ${error.message}`);
-      return null;
-    }
-  }
-
   decodeUserToken(token?: string): DecodedToken | null {
     try {
       if (!token) {

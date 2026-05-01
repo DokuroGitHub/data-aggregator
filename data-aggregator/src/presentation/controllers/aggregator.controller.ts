@@ -1,10 +1,11 @@
-import { AGGREGATOR_SERVICE } from '@common/constants';
+import { AGGREGATOR_SERVICE, JWT_SERVICE } from '@common/constants';
 import { AggregatorEntity } from '@domain/entities';
-import { IAggregatorExecutionResult, IAggregatorService } from '@domain/services';
+import { IAggregatorExecutionResult, IAggregatorService, IJwtService } from '@domain/services';
 import {
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Inject,
@@ -13,8 +14,19 @@ import {
   Post,
   Query,
   Body,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiHeader,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AggregatorResponseDto, PageResponseDto, SaveAggregatorDto } from '../dto';
 import { AggregatorStatus } from '@common/enums';
 import { ErrorResponseDto } from '@presentation/dto/error.dto';
@@ -25,6 +37,8 @@ export class AggregatorController {
   constructor(
     @Inject(AGGREGATOR_SERVICE)
     private readonly aggregatorService: IAggregatorService,
+    @Inject(JWT_SERVICE)
+    private readonly jwtService: IJwtService,
   ) {}
 
   @Post()
@@ -189,8 +203,30 @@ export class AggregatorController {
   @Delete(':name')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft delete aggregator by name' })
-  @ApiParam({ name: 'name', type: String })
-  async deleteAggregatorByName(@Param('name') name: string, @Query('deletedBy') deletedBy?: string): Promise<void> {
+  @ApiBearerAuth()
+  @ApiParam({ name: 'name', type: String, example: 'unified-document-view-by-vin' })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Missing or invalid bearer token',
+    type: ErrorResponseDto,
+  })
+  async deleteAggregatorByName(@Param('name') name: string, @Req() request?: any): Promise<void> {
+    const authorization = request?.headers?.authorization || '';
+    const decoded = this.jwtService.decodeUserToken(authorization.replace('Bearer ', ''));
+    if (!decoded) {
+      throw new UnauthorizedException('Authorization token is required');
+    }
+
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    if (decoded.exp && decoded.exp <= nowInSeconds) {
+      // throw new UnauthorizedException('Authorization token is expired');
+    }
+
+    const deletedBy = decoded.full_name || decoded.name || decoded.email;
+    if (!deletedBy) {
+      throw new UnauthorizedException('Token does not include user identity');
+    }
+
     const isDeleted = await this.aggregatorService.deleteByName(name, deletedBy);
 
     if (!isDeleted) {
