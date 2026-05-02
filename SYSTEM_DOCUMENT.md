@@ -545,13 +545,7 @@ graph TB
       "mimeType": "application/pdf",
       "source": "Service System"
     }
-  ],
-  "pageNumber": 1,
-  "pageSize": 10,
-  "totalPage": 2,
-  "totalItem": 11,
-  "hasNextPage": true,
-  "hasPreviousPage": false
+  ]
 }
 ```
 
