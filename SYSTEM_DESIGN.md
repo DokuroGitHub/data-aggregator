@@ -1215,6 +1215,27 @@ return data;
 4. **Observability first** - Recommendation to instrument from the beginning rather than adding later
 5. **Documentation matters** - GenAI helped structure comprehensive design documentation
 
+### GenAI Referenced Documentation and Prompt Assets
+
+The following artifacts were used as references while drafting this system design and its GenAI workflow:
+
+- [data-aggregator/docs/ai/requirements/README.md](data-aggregator/docs/ai/requirements/README.md) - Requirements and problem-understanding template for scope, constraints, and success criteria.
+- [data-aggregator/docs/ai/planning/README.md](data-aggregator/docs/ai/planning/README.md) - Planning template for milestones, task breakdown, dependencies, risks, and estimates.
+- [data-aggregator/docs/ai/implementation/README.md](data-aggregator/docs/ai/implementation/README.md) - Implementation template covering setup, structure, integration, error handling, performance, and security notes.
+- [data-aggregator/docs/ai/testing/README.md](data-aggregator/docs/ai/testing/README.md) - Testing strategy template for unit, integration, end-to-end, manual, and performance validation.
+- [data-aggregator/.github/copilot-instructions.md](data-aggregator/.github/copilot-instructions.md) - Repository-specific Copilot guidance aligned with `docs/ai` phases.
+- [data-aggregator/.github/prompts/README.md](data-aggregator/.github/prompts/README.md) - Index of reusable slash prompts in `.github/prompts`.
+- [data-aggregator/.github/prompts/new-requirement.prompt.md](data-aggregator/.github/prompts/new-requirement.prompt.md) - Workflow for capturing new requirements and linking to design/implementation.
+- [data-aggregator/.github/prompts/review-requirements.prompt.md](data-aggregator/.github/prompts/review-requirements.prompt.md) - Checklist-oriented requirements review prompt.
+- [data-aggregator/.github/prompts/review-design.prompt.md](data-aggregator/.github/prompts/review-design.prompt.md) - Architecture and design review prompt.
+- [data-aggregator/.github/prompts/execute-plan.prompt.md](data-aggregator/.github/prompts/execute-plan.prompt.md) - Plan execution prompt with doc references.
+- [data-aggregator/.github/prompts/check-implementation.prompt.md](data-aggregator/.github/prompts/check-implementation.prompt.md) - Implementation-vs-plan/design verification prompt.
+- [data-aggregator/.github/prompts/writing-test.prompt.md](data-aggregator/.github/prompts/writing-test.prompt.md) - Prompt for writing tests against expected behavior.
+- [data-aggregator/.github/prompts/update-planning.prompt.md](data-aggregator/.github/prompts/update-planning.prompt.md) - Prompt for updating planning artifacts during delivery.
+- [data-aggregator/.github/prompts/code-review.prompt.md](data-aggregator/.github/prompts/code-review.prompt.md) - Structured local code review prompt before push.
+- [data-aggregator/.github/prompts/debug.prompt.md](data-aggregator/.github/prompts/debug.prompt.md) - Debug workflow prompt for diagnosis and fixes.
+- [data-aggregator/.github/prompts/capture-knowledge.prompt.md](data-aggregator/.github/prompts/capture-knowledge.prompt.md) - Prompt for capturing durable project knowledge.
+
 ---
 
 ## Conclusion
