@@ -60,7 +60,7 @@ export class AggregatorService implements IAggregatorService {
   }
 
   async executeByName(name: string, params: Record<string, unknown> = {}): Promise<IAggregatorExecutionResult | null> {
-    const cacheKey = `${this.redisConfig.aggregatorResponsePrefix}:${name}`;
+    const cacheKey = `${this.redisConfig.aggregatorResponsePrefix}:${name}:${JSON.stringify(params)}`;
 
     // Try to get from Redis first
     const cachedData = await this.redisClient.get<IAggregatorExecutionResult>(cacheKey);

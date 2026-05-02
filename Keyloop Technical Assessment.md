@@ -37,14 +37,14 @@ systems.
 • Core Requirements:
 
 1. Resource Constrained Booking: Allow a user to request a service
-appointment for a specific vehicle, service type, and dealership at a
-desired time.
+   appointment for a specific vehicle, service type, and dealership at a
+   desired time.
 2. Real-Time Availability Check: Before confirming, check for the
-availability of both a ServiceBay and a qualified Technician for the entire
-service duration.
+   availability of both a ServiceBay and a qualified Technician for the entire
+   service duration.
 3. Confirmed Appointment Record: Upon success, create a persistent
-Appointment record associating the customer, vehicle, technician, and
-service bay.
+   Appointment record associating the customer, vehicle, technician, and
+   service bay.
 
 ## Scenario B: The Intelligent Inventory Dashboard
 
@@ -56,12 +56,12 @@ real-time overview of their vehicle stock.
 • Core Requirements:
 
 1. Inventory Visualization: Display a filterable list of all vehicles in a
-dealership's inventory (e.g., filter by make, model, age).
+   dealership's inventory (e.g., filter by make, model, age).
 2. Aging Stock Identification: Automatically identify and prominently
-display "aging stock" (vehicles in inventory for >90 days).
+   display "aging stock" (vehicles in inventory for >90 days).
 3. Actionable Insights: Allow a manager to log and persist a status or
-proposed action for each aging vehicle (e.g., "Price Reduction
-Planned").
+   proposed action for each aging vehicle (e.g., "Price Reduction
+   Planned").
 
 ## Scenario C: The Sales Lead Management Tool
 
@@ -74,10 +74,10 @@ manage and track incoming leads from the dealership's website.
 
 1. Lead Inbox: Display a list of all incoming sales leads.
 2. Lead Details View: Clicking a lead must show its full details and a
-chronological log of all follow-up activities.
+   chronological log of all follow-up activities.
 3. Activity Logging: Provide an interface for a salesperson to log a new
-follow-up activity for a lead (e.g., "Called customer"), which must be
-persisted.
+   follow-up activity for a lead (e.g., "Called customer"), which must be
+   persisted.
 
 ## Scenario D: The Unified Document Viewer
 
@@ -90,13 +90,13 @@ dealership systems.
 • Core Requirements:
 
 1. Unified Search: Provide a single search interface where a user can enter
-a Vehicle Identification Number (VIN).
+   a Vehicle Identification Number (VIN).
 2. Data Aggregation: The backend must make parallel requests to two
-mocked external APIs (a "Sales System API" and a "Service System
-API").
+   mocked external APIs (a "Sales System API" and a "Service System
+   API").
 3. Aggregated View: The UI must display a single, consolidated list of all
-documents from both sources, clearly indicating the source system for
-each.
+   documents from both sources, clearly indicating the source system for
+   each.
 
 ## The Challenge Structure
 
@@ -142,21 +142,22 @@ maintainability, and observability.
 
 Please submit the following three artifacts:
 
-1. System Design Document: Your architectural plan.
+1.  System Design Document: Your architectural plan.
 
-2. Working Code: A Git repository containing your chosen service implementation.
-It must include:
+2.  Working Code: A Git repository containing your chosen service implementation.
+    It must include:
     o A README.md with clear instructions on how to build, run, and test your
-application.
+    application.
 
-    o A dedicated section in the README for your AI Collaboration Narrative.
-Describe your high-level strategy for guiding the AI, your process for
-verifying and refining its output, and how you ensured the final quality
-of the code.
+        o A dedicated section in the README for your AI Collaboration Narrative.
 
-    o A suite of tests that validate the core business logic.
+    Describe your high-level strategy for guiding the AI, your process for
+    verifying and refining its output, and how you ensured the final quality
+    of the code.
 
-3. Video Submission (5-10 minutes): A short video presentation covering:
+        o A suite of tests that validate the core business logic.
+
+3.  Video Submission (5-10 minutes): A short video presentation covering:
 
     o A brief introduction to yourself and your chosen scenario.
 
@@ -173,11 +174,11 @@ of the code.
 We will be evaluating your submission across four key dimensions:
 
 1. Problem Solving & System Design: The clarity, logic, and foresight of your
-architecture.
+   architecture.
 2. Technical Execution: The quality, correctness, and testing of your
-implementation.
+   implementation.
 3. AI Engineering & Verification: Your strategy for directing AI and your process
-for verifying, debugging, and owning the final solution.
+   for verifying, debugging, and owning the final solution.
 4. Communication & Presentation: The clarity and professionalism of your
-documentation and video.
-We are excited to see what you build. Good luck!
+   documentation and video.
+   We are excited to see what you build. Good luck!
