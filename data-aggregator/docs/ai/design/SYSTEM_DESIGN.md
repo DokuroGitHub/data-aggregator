@@ -77,8 +77,6 @@ This architecture ensures:
 
 ## Architecture Diagram
 
-![Architecture Diagram](./architecture-diagram.png)
-
 ```mermaid
 graph TB
     Client["Client/Frontend<br/>(VIN Search)"]

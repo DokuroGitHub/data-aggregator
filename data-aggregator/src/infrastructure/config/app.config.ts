@@ -71,6 +71,8 @@ export const redisConfig = registerAs(
     db: Number(process.env.REDIS_DB || 0),
     aggregatorPrefix: process.env.REDIS_AGGREGATOR_PREFIX || 'fai:aggregator',
     aggregatorTTL: Number(process.env.REDIS_AGGREGATOR_TTL) || 3600,
+    aggregatorResponsePrefix: process.env.REDIS_AGGREGATOR_RESPONSE_PREFIX || 'fai:aggregator:response',
+    aggregatorResponseTTL: Number(process.env.REDIS_AGGREGATOR_RESPONSE_TTL) || 5,
   }),
 );
 

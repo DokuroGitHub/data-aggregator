@@ -57,4 +57,6 @@ export interface IRedisConfiguration {
   db?: number;
   aggregatorPrefix: string;
   aggregatorTTL: number;
+  aggregatorResponsePrefix: string;
+  aggregatorResponseTTL: number;
 }

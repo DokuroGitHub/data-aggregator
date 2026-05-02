@@ -60,6 +60,14 @@ export class AggregatorService implements IAggregatorService {
   }
 
   async executeByName(name: string, params: Record<string, unknown> = {}): Promise<IAggregatorExecutionResult | null> {
+    const cacheKey = `${this.redisConfig.aggregatorResponsePrefix}:${name}`;
+
+    // Try to get from Redis first
+    const cachedData = await this.redisClient.get<IAggregatorExecutionResult>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
+
     const aggregator = await this.findByName(name);
 
     if (!aggregator) {
@@ -75,7 +83,7 @@ export class AggregatorService implements IAggregatorService {
       ? DataHelper.removeDuplicates(transformedResults)
       : transformedResults;
 
-    return {
+    const result: IAggregatorExecutionResult = {
       sources: sourceResults.map(({ name: sourceName, status, error, responseTime, totalTime, totalItem }) => ({
         name: sourceName,
         status,
@@ -86,7 +94,14 @@ export class AggregatorService implements IAggregatorService {
       })),
       totalItem: deduplicatedResults.length,
       data: deduplicatedResults,
-    } as IAggregatorExecutionResult;
+    };
+
+    // Cache the result
+    if (aggregator) {
+      await this.redisClient.set(cacheKey, result, this.redisConfig.aggregatorResponseTTL);
+    }
+
+    return result;
   }
 
   findAll(includeInactive?: boolean): Promise<AggregatorEntity[]> {
