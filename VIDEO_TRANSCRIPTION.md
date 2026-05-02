@@ -130,7 +130,12 @@ If I call the execute endpoint again, it will say "source 1 failed" and return 0
 All I need to do is update the config with the new url and transform function, and then it works again without any code changes.
 
 **Step 5 - Testing.** - 20s
+
 I run the test suite. All tests pass, confirming that core functionality is working as expected.
+
+**Step 6 - Observability.** - 20s
+I check the Elasticsearch logs and APM dashboard to see the recorded logs and metrics for my requests.
+I can see the performance of each source, error rates, and other useful information for monitoring and debugging.
 
 ---
 
