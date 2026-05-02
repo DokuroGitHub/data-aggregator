@@ -12,6 +12,9 @@ import { IAppConfiguration } from './domain/interfaces';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Set global API prefix
+  app.setGlobalPrefix('api');
+
   // Enable CORS for SSE and API requests
   app.enableCors({
     origin: true, // Allow all origins in development
