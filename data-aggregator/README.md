@@ -42,7 +42,7 @@ aggregator
     }
   ],
   "fn": "return value.slice(0,10);",
-  "shouldRemoveDuplicates": false
+  "shouldRemoveDuplicates": true
 }
 ```
 
