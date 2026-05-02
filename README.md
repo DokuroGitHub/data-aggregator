@@ -8,11 +8,11 @@ This repository contains a document aggregation solution composed of three servi
 
 The aggregator queries `sales-system` and `service-system`, merges results, and returns a unified response.
 
-## System Design
+## System Document
 
-Full architecture and design decisions are documented in `SYSTEM_DESIGN.md`.
+Full architecture and design decisions are documented in `SYSTEM_DOCUMENT.md`.
 
-See: [Unified Document Aggregator - System Design](SYSTEM_DESIGN.md)
+See: [Unified Document Aggregator - System Document](SYSTEM_DOCUMENT.md)
 
 ## Prerequisites
 
