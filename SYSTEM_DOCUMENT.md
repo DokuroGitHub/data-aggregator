@@ -19,8 +19,9 @@
 9. [Technology Stack](#technology-stack)
 10. [API Design](#api-design)
 11. [Observability Strategy](#observability-strategy)
-12. [Design Decisions](#design-decisions)
-13. [GenAI Assistance in Design](#genai-assistance-in-design)
+12. [Next Steps & Improvements](#next-steps--improvements)
+13. [Design Decisions](#design-decisions)
+14. [GenAI Assistance in Design](#genai-assistance-in-design)
 
 ---
 
@@ -74,15 +75,78 @@ This architecture ensures:
 ## Architecture Diagram
 
 ```mermaid
+flowchart TB
+ subgraph Services["Service Instances(Horizontally Scalable)"]
+        SVC1["Data Aggregator"]
+  end
+ subgraph SharedServices["Shared Infrastructure"]
+        PG["PostgreSQL<br>(Primary)"]
+        Redis["Redis Cluster<br>(High Availability)"]
+        ES["Elasticsearch<br>(Log Storage)"]
+        APM["APM Server<br>(Metrics)"]
+  end
+ subgraph ExternalSystems["External Systems"]
+        SalesAPI["Sales System"]
+        ServiceAPI["Service System"]
+  end
+    SVC1 -- read/write --> PG
+    SVC1 -- cache --> Redis
+    SVC1 -- logs --> ES
+    SVC1 -- metrics --> APM
+    SVC1 -- API calls --> SalesAPI & ServiceAPI
+
+    style Services fill:#4caf50
+    style SharedServices fill:#2196f3
+    style ExternalSystems fill:#f44336
+```
+
+## Data Flow During Aggregation
+
+```mermaid
+graph LR
+  A["Create aggregator config<br/>name, params, sources, fn"] --> B["Save config<br/>in PostgreSQL"]
+  B --> C["Return execute endpoint<br/>/api/aggregators/execute/:name"]
+  C --> D["Execute request<br/>name + VIN"]
+  D --> E["Check Redis cache<br/>TTL 5s"]
+  E -->|miss| F["Load config<br/>from PostgreSQL"]
+  E -->|hit| N["Return cached response"]
+
+  F --> G["Call Sales API<br/>in parallel"]
+  F --> H["Call Service API<br/>in parallel"]
+
+  G --> I["Transform to<br/>common schema"]
+  H --> J["Transform to<br/>common schema"]
+
+  I --> K["Merge unified documents"]
+  J --> K
+
+  K --> L["Store response<br/>in Redis (5s TTL)"]
+  L --> M["Send logs to Elasticsearch<br/>and metrics to APM"]
+  M --> O["Return unified response"]
+  N --> M
+
+    style A fill:#e3f2fd
+  style O fill:#c8e6c9
+  style G fill:#ffebee
+  style H fill:#ffebee
+    style K fill:#f3e5f5
+  style E fill:#ffe0b2
+```
+
+```mermaid
 graph TB
     Client["Client/Frontend<br/>(VIN Search)"]
 
-    Client -->|HTTP POST<br/>VIN| Controller["🎯 Aggregator Controller<br/>(Presentation)"]
+    Client -->|HTTP POST<br/>Create config| Controller["🎯 Aggregator Controller<br/>(Presentation)"]
+    Controller -->|Save config| Repo["🗄️ Aggregator Repository<br/>(PostgreSQL)"]
+    Repo -->|Created config + execute endpoint| Controller
+
+    Client -->|HTTP POST<br/>/execute/:name + VIN| Controller
 
     Controller -->|AggregateDocuments<br/>Request| AggregatorService["⚙️ Aggregator Service<br/>(Application)"]
 
-    AggregatorService -->|Load Config| Repo["🗄️ Aggregator Repository<br/>(PostgreSQL)"]
     AggregatorService -->|Check Cache| Redis["⚡ Redis Cache<br/>(Distributed)"]
+    AggregatorService -->|Cache miss -> Load Config| Repo
 
     AggregatorService -->|Parallel Requests| SalesAPI["🔗 Sales System API<br/>(Mocked)<br/>GET /search?vin=XXX"]
     AggregatorService -->|Parallel Requests| ServiceAPI["🔗 Service System API<br/>(Mocked)<br/>POST /download-documents"]
@@ -90,7 +154,7 @@ graph TB
     SalesAPI -->|Documents| Transform["📝 Transform & Merge<br/>- Map to common schema<br/>- Remove duplicates<br/>- Apply custom logic"]
     ServiceAPI -->|Documents| Transform
 
-    Transform -->|Aggregated Results| CacheStore["💾 Store in Cache<br/>(TTL-based)"]
+    Transform -->|Aggregated Results| CacheStore["💾 Store in Cache<br/>(TTL 5s)"]
     Transform -->|Success Response| Controller
 
     Controller -->|HTTP 200<br/>Aggregated View| Client
@@ -111,41 +175,6 @@ graph TB
     style Transform fill:#e0f2f1
     style Logger fill:#f1f8e9
     style APM fill:#fce4ec
-```
-
-## Data Flow During Aggregation
-
-```mermaid
-graph LR
-    A["Input<br/>{vin}"] --> B["Validate<br/>params"]
-    B --> C["Fetch config<br/>from cache/DB"]
-    C --> D["Build request<br/>templates"]
-
-    D --> E["Sales API<br/>GET req"]
-    D --> F["Service API<br/>POST req"]
-
-    E --> G["Parse Sales<br/>response"]
-    F --> H["Parse Service<br/>response"]
-
-    G --> I["Map to<br/>common schema"]
-    H --> J["Map to<br/>common schema"]
-
-    I --> K["Merge"]
-    J --> K
-
-    K --> L["Deduplicate<br/>by URL hash"]
-    L --> M["Apply custom<br/>aggregation fn"]
-    M --> N["Limit to<br/>max items"]
-    N --> O["Format response<br/>with pagination"]
-    O --> P["Cache results<br/>5 min TTL"]
-    P --> Q["Return to<br/>client"]
-
-    style A fill:#e3f2fd
-    style Q fill:#c8e6c9
-    style E fill:#ffebee
-    style F fill:#ffebee
-    style K fill:#f3e5f5
-    style P fill:#ffe0b2
 ```
 
 ## Request Flow Diagram
@@ -202,7 +231,7 @@ sequenceDiagram
         Service->>Service: Remove duplicates
         Service->>Service: Apply aggregation fn()
 
-        Service->>Cache: Store result (5min TTL)
+        Service->>Cache: Store result (5s TTL)
         Cache-->>Service: OK
     end
 
@@ -289,9 +318,9 @@ graph TB
 
 - **Responsibility:** HTTP request handling and response formatting
 - **Key Endpoints:**
-  - `POST /api/aggregators` - Create/update aggregator definitions
+  - `POST /api/aggregators` - Create/update aggregator definitions and return execute endpoint
   - `GET /api/aggregators/get-all` - List all aggregator definitions
-  - `POST /api/aggregators/execute/:name` - Execute aggregator by name
+  - `POST /api/aggregators/execute/:name` - Execute aggregator by name with required params (e.g. VIN)
   - `DELETE /api/aggregators/:id` - Soft delete aggregator
 - **Features:**
   - JWT-based authentication (Bearer token)
@@ -314,15 +343,16 @@ graph TB
 - **Responsibility:** Business logic orchestration and data aggregation
 - **Key Methods:**
   - `execute()` - Main aggregation workflow
-    1. Fetch aggregator definition from cache or database
-    2. Validate input parameters
-    3. Make parallel requests to configured sources
-    4. Transform and merge results
-    5. Apply custom aggregation functions
-    6. Remove duplicates if enabled
-    7. Cache the results
+    1. Validate input parameters (e.g. VIN)
+    2. Check Redis response cache (TTL 5 seconds)
+    3. On cache miss, load aggregator definition from PostgreSQL
+    4. Make parallel requests to configured sources
+    5. Transform and merge results
+    6. Apply custom aggregation functions
+    7. Remove duplicates if enabled
+    8. Cache the unified response in Redis
   - `save()` - Persist aggregator definitions with cache invalidation
-  - `findByName()` - Retrieve aggregator with 2-level caching
+  - `findByName()` - Retrieve aggregator definition from PostgreSQL
 - **Features:**
   - Parallel API calls using `Promise.all()`
   - Intelligent caching strategy with TTL
@@ -463,52 +493,41 @@ graph TB
 
 ### Data Flow: VIN Search
 
-```
-1. REQUEST PHASE
-   ├─ Client sends: { vin: "ABC123XYZ" }
-   └─ Controller validates and passes to Service
+```sh
+1. CONFIG CREATION PHASE
+  ├─ User creates data aggregator config:
+  │  ├─ name (used for URL path)
+  │  ├─ params (e.g. VIN)
+  │  └─ sources with url, params, and fn transform rules
+  ├─ Service saves config record in PostgreSQL
+  └─ Service returns execute endpoint as a new data aggregation
 
-2. CACHE CHECK PHASE
-   ├─ Service checks: redis.get("aggregator:response:unified-document-view-by-vin")
-   └─ If hit: Return cached results (FAST PATH)
+2. EXECUTION REQUEST PHASE
+  ├─ User sends request using aggregator name + VIN
+  └─ Controller validates and passes to Service
 
-3. DATABASE PHASE
-   ├─ Service fetches: Aggregator definition from PostgreSQL
-   └─ Retrieves: sources, transformation functions, parameters
+3. CACHE + CONFIG LOAD PHASE
+  ├─ Service checks Redis response cache (TTL: 5 seconds)
+  ├─ If cache hit: return cached response
+  └─ If cache miss: load aggregator config from PostgreSQL
 
 4. PARALLEL API PHASE (Concurrent)
-   ├─ Sales System API Request
-   │  ├─ GET /api/sales-system/search?q=ABC123XYZ&pageSize=5&mimeType=pdf&waitMs=500
-   │  └─ Response: { data: [{ url, mimeType, ... }] }
-   │
-   └─ Service System API Request
-      ├─ POST /api/service-system/download-documents
-      ├─ Body: { VIN: "ABC123XYZ", wait_ms: 800 }
-      └─ Response: { results: [{ URL, mime_type, ... }] }
+  ├─ Sales System API Request
+  └─ Service System API Request
 
-5. TRANSFORMATION PHASE
-   ├─ Per-source transformation (fn fields)
-   │  ├─ Sales: Map to { url, mimeType, source: "Sales System" }
-   │  └─ Service: Map to { url, mimeType, source: "Service System" }
-   │
-   └─ Apply custom aggregation function
-      └─ fn: "return value.slice(0,10);" → Limit to 10 results
+5. TRANSFORMATION + MERGE PHASE
+  ├─ Per-source transformation using configured fn
+  └─ Merge into unified document list
 
-6. DEDUPLICATION PHASE (If enabled)
-   ├─ Remove duplicate documents by URL hash
-   └─ Maintain first occurrence with all source references
+6. CACHE STORE PHASE
+  └─ Save unified response to Redis (TTL: 5 seconds)
 
-7. CACHE STORAGE PHASE
-   ├─ Store in Redis with TTL (default: 5 minutes)
-   └─ Key: "aggregator:unified-document-view-by-vin:{hash}"
+7. OBSERVABILITY PHASE
+  ├─ Send logs to Elasticsearch
+  └─ Send metrics to APM server
 
 8. RESPONSE PHASE
-   ├─ Return aggregated view with:
-   │  ├─ Source metadata (name, status, totalItem count)
-   │  ├─ Aggregated documents (10 items max)
-   │  └─ Pagination metadata
-   │
-   └─ HTTP 200 Response
+  └─ Return unified document list to client
 ```
 
 ### Response Schema
@@ -553,16 +572,16 @@ graph TB
 
 ## Technology Stack
 
-| Category | Technology | Purpose |
-|---|---|---|
-| **Backend** | NestJS 10.x + TypeScript | Enterprise Node.js framework |
-| **Database** | PostgreSQL + TypeORM | Persistent storage for configurations |
-| **Cache** | Redis | 2-5 minute TTL for aggregation results |
-| **APIs** | Axios + @nestjs/axios | HTTP client for external systems |
-| **Logging** | Winston | Structured JSON logging to ELK |
-| **Monitoring** | Elastic APM | Distributed tracing & metrics |
-| **Testing** | Jest | Unit & E2E tests |
-| **Container** | Docker + PM2 | Production deployment |
+| Category       | Technology               | Purpose                               |
+| -------------- | ------------------------ | ------------------------------------- |
+| **Backend**    | NestJS 10.x + TypeScript | Enterprise Node.js framework          |
+| **Database**   | PostgreSQL + TypeORM     | Persistent storage for configurations |
+| **Cache**      | Redis                    | 5-second TTL for aggregation results  |
+| **APIs**       | Axios + @nestjs/axios    | HTTP client for external systems      |
+| **Logging**    | Winston                  | Structured JSON logging to ELK        |
+| **Monitoring** | Elastic APM              | Distributed tracing & metrics         |
+| **Testing**    | Jest                     | Unit & E2E tests                      |
+| **Container**  | Docker + PM2             | Production deployment                 |
 
 ### Backend Framework
 
@@ -698,7 +717,13 @@ Request Body:
 }
 
 Response 201:
-{ /* saved aggregator entity */ }
+{
+  "id": 1,
+  "name": "unified-document-view-by-vin",
+  "params": ["vin"],
+  "status": "active",
+  "executeEndpoint": "/api/aggregators/execute/unified-document-view-by-vin"
+}
 ```
 
 #### 3. Get All Aggregator Definitions
@@ -1048,6 +1073,16 @@ fn: "return value.slice(0,10);"; // Limit to 10 results
 - **Application:** Business logic (services, orchestration)
 - **Domain:** Core business objects (entities, interfaces, value objects)
 - **Infrastructure:** External integrations (databases, APIs, caching)
+
+---
+
+## Next Steps & Improvements
+
+| Feature                            | Description                                                                                               | Use Case                                                                                                                      | Priority |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
+| **Aggregator Versioning**          | Support aggregator versioning                                                                             | Allow multiple users to update and maintain different versions of aggregator logic simultaneously                             | High     |
+| **Authentication & Authorization** | Implement role-based access control (RBAC) for aggregator execution and management; track user actions    | Restrict aggregator creation/deletion to admins; limit execution to authenticated users; audit who accessed which aggregators | High     |
+| **Rate Limiting Component**        | Add per-user/per-IP rate limiter to prevent API abuse; integrate with Redis for distributed rate limiting | Protect aggregator endpoints from DDoS; enforce fair usage policies (e.g., 100 requests/minute per client)                    | High     |
 
 ---
 
