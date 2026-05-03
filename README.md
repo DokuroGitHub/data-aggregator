@@ -109,6 +109,10 @@ pnpm test:e2e
 
 `sales-system` and `service-system` currently do not define automated test scripts in this repository. Validate them manually using their documented endpoints.
 
+## Demo
+
+- [YouTube Demo](https://www.youtube.com/watch?v=2WDK2Nf0uaM)
+
 ## Quick Smoke Test
 
 After all three services are running, create an aggregator definition, then execute it.
